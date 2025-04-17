@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "resume_ats_scorer"
+version = "1.0.0"
+authors = [
+    {name = "Resume ATS Scorer Team", email = "info@example.com"},
+]
+description = "A Resume ATS Score Checker using CrewAI for multi-agent design"
+readme = "README.md"
+requires-python = ">=3.12"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.12",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/deepakalevoor2/resume-ats-scorer"
+"Bug Tracker" = "https://github.com/deepakalevoor2/resume-ats-scorer/issues"
