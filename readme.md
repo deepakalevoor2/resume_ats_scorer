@@ -1,103 +1,165 @@
-# Resume ATS Score Checker
+# Resume ATS Scorer
 
-A Python package that analyzes resumes against job descriptions to provide ATS compatibility scores and recommendations for improvement.
+A multi-agent system for analyzing resumes against job descriptions and providing ATS (Applicant Tracking System) compatibility scores.
 
 ## Features
 
-- **Resume Parser**: Extract text from uploaded resume files (PDF, DOCX, HTML, TXT)
-- **Keyword Analyst**: Extract and analyze keywords from uploaded resumes
-- **Job Description Parser**: Extract key requirements from job postings (Naukri, LinkedIn, etc.)
-- **Matching Algorithm**: Compare resume content against job requirements
-- **Scoring System**: Generate a numeric score based on keyword matching and formatting analysis
-- **Recommendation Engine**: Suggest improvements & feedback to increase ATS compatibility
-
-## Scoring Mechanism
-
-The system uses a multi-dimensional scoring approach with a maximum total score of 100 points:
-
-### Content Match (50 points)
-Measures how well the resume content aligns with job requirements:
-- Keyword matches
-- Required skills presence
-- Experience relevance
-
-### Format Compatibility (20 points)
-Evaluates how well the resume format works with ATS systems:
-- Clear section headings
-- Standard formatting
-- Proper use of text vs. tables/graphics
-
-### Section-Specific Analysis (30 points)
-Targeted scores for key resume sections:
-- Skills Match (10 points)
-- Experience Match (10 points)
-- Education Match (5 points)
-- Overall Formatting (5 points)
-
-## Examples
-
-### Score Interpretation
-
-| Score Range | Interpretation |
-|-------------|----------------|
-| 90-100      | Excellent - Highly ATS compatible |
-| 75-89       | Good - Generally ATS compatible |  
-| 60-74       | Fair - Some improvements needed |
-| Below 60    | Poor - Significant improvements needed |
-
-### Sample Recommendations
-
-- "Add these missing keywords: Python, AWS, Docker"
-- "Improve your Skills section by using more specific technical terms"
-- "Use strong action verbs in your Experience section"
-- "Consider adding quantifiable achievements with numbers and percentages"
+- **Resume Parsing**: Extract text from various file formats (PDF, DOCX, HTML, TXT)
+- **Keyword Analysis**: Identify key skills and qualifications
+- **Job Description Processing**: Parse and analyze job requirements
+- **ATS Compatibility Scoring**: Evaluate resume format and content
+- **Improvement Recommendations**: Suggest ways to enhance ATS compatibility
 
 ## Installation
+
+### Prerequisites
+
+- Python 3.12 or higher
+- Docker (optional)
+
+### Using pip
 
 ```bash
 pip install resume-ats-scorer
 ```
 
-## Usage
+### From source
 
-### As a Python Package
-
-```python
-from resume_ats_scorer.core.crew_manager import ResumeCrewManager
-from resume_ats_scorer.models.schemas import ScoringRequest, FileType, JobPlatform
-
-# Create a scoring request
-request = ScoringRequest(
-    resume_file_path="/path/to/resume.pdf",
-    job_description="Job description text...",
-    job_platform=JobPlatform.LINKEDIN,
-    file_type=FileType.PDF
-)
-
-# Process the request
-crew_manager = ResumeCrewManager()
-result = await crew_manager.score_resume(request)
-
-# Print the results
-print(f"Total Score: {result.total_score}")
-print(f"Content Match Score: {result.content_match_score}")
-print(f"Format Compatibility Score: {result.format_compatibility_score}")
-print("Recommendations:")
-for rec in result.recommendations:
-    print(f"- {rec}")
+```bash
+git clone https://github.com/deepakalevoor2/resume_ats_scorer.git
+cd resume_ats_scorer
+pip install -e .
 ```
 
-### Using the API
+### Using Docker
+
+```bash
+docker pull deepakalevoor2/resume-ats-scorer:latest
+docker run -p 8000:8000 resume-ats-scorer
+```
+
+## Usage
+
+### API Server
 
 Start the API server:
 
 ```bash
-uvicorn resume_ats_scorer.api.main:app --reload
+uvicorn resume_ats_scorer.api.main:app --host 0.0.0.0 --port 8000
 ```
 
-Then make requests to the API:
+The API will be available at `http://localhost:8000` with documentation at `http://localhost:8000/docs`.
+
+### Python Package
+
+```python
+from resume_ats_scorer import ResumeATSScorer
+
+# Initialize the scorer
+scorer = ResumeATSScorer()
+
+# Score a resume against a job description
+result = scorer.score_resume(
+    resume_path="path/to/resume.pdf",
+    job_description={
+        "title": "Senior Software Engineer",
+        "description": "Looking for a Python developer...",
+        "requirements": ["Python", "Django", "AWS"]
+    }
+)
+
+# Get the score and recommendations
+print(f"ATS Score: {result.score}")
+print("Recommendations:", result.recommendations)
+```
+
+## API Endpoints
+
+### Resume Analysis
+
+- `POST /api/v1/resume/upload`: Upload a resume file
+- `GET /api/v1/resume/{resume_id}`: Get resume analysis results
+
+### Job Description
+
+- `POST /api/v1/job-description/submit`: Submit a job description
+- `GET /api/v1/job-description/{job_id}`: Get job description details
+
+### Scoring
+
+- `POST /api/v1/scoring/score`: Score a resume against a job description
+- `GET /api/v1/scoring/recommendations/{resume_id}/{job_id}`: Get improvement recommendations
+
+## Scoring Mechanism
+
+The scoring system uses a multi-dimensional approach (Total Score = 100):
+
+### 1. Content Match (50 points)
+- Keyword Matching (30 points)
+- Experience Relevance (20 points)
+
+### 2. Format Compatibility (30 points)
+- Document Structure (15 points)
+- ATS-Friendly Elements (15 points)
+
+### 3. Section-Specific Scores (20 points)
+- Professional Summary (5 points)
+- Work Experience (7 points)
+- Skills Section (5 points)
+- Education (3 points)
+
+## Development
+
+### Setup Development Environment
 
 ```bash
-curl -X POST "http://localhost:8000/score" \
-  -H "accept: application/json" \
-  -H "Content-Type: multipart/form-data" \
+git clone https://github.com/deepakalevoor2/resume_ats_scorer.git
+cd resume_ats_scorer
+python -m venv venv
+source venv/bin/activate  # or `venv\Scripts\activate` on Windows
+pip install -e ".[dev]"
+pre-commit install
+```
+
+### Running Tests
+
+```bash
+pytest
+```
+
+### Code Quality
+
+```bash
+# Format code
+black .
+isort .
+
+# Lint code
+flake8
+mypy .
+
+# Security check
+bandit -r resume_ats_scorer
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- [CrewAI](https://github.com/joaomdmoura/crewAI) for the multi-agent framework
+- [FastAPI](https://fastapi.tiangolo.com/) for the web framework
+- [spaCy](https://spacy.io/) for NLP capabilities
+
+## Support
+
+For support, email support@resumeatsscorer.com or open an issue in the GitHub repository.
