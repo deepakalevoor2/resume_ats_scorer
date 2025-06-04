@@ -6,7 +6,7 @@ from ..agents.keyword_analyst import KeywordAnalyst
 from ..agents.job_description_parser import JobDescriptionParser
 from ..agents.matching_algorithm import MatchingAlgorithm
 from ..agents.recommendation_engine import RecommendationEngine
-from ..models.schemas import ScoringRequest, ResumeScoreResult, ParsedResume, ParsedJobDescription
+from ..models.schemas import ResumeUploadRequest, ResumeScoreResponse, ParsedResume, ParsedJobDescription
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ class ResumeCrewManager:
         self.matching_algorithm = MatchingAlgorithm()
         self.recommendation_engine = RecommendationEngine()
     
-    async def score_resume(self, request: ScoringRequest) -> ResumeScoreResult:
+    async def score_resume(self, request: ResumeUploadRequest) -> ResumeScoreResponse:
         """Process a scoring request through the entire CrewAI workflow."""
         logger.info(f"Processing resume scoring request for file: {request.resume_file_path}")
         

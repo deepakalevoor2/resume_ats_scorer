@@ -2,8 +2,12 @@ import logging
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Any
-from ..models.schemas import ErrorResponse
-from utils.text_processors import extract_job_requirements
+from ...models.schemas import (
+    JobDescriptionRequest,
+    ParsedJobDescription,
+    JobSource
+)
+from resume_ats_scorer.utils.text_processors import extract_job_requirements
 
 logger = logging.getLogger(__name__)
 

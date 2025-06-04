@@ -5,13 +5,13 @@ import tempfile
 import json
 from pathlib import Path
 
-from agents.resume_parser_agent import ResumeParserAgent
-from agents.keyword_analyst_agent import KeywordAnalystAgent
-from agents.job_description_agent import JobDescriptionAgent
-from agents.matching_agent import MatchingAgent
-from agents.scoring_agent import ScoringAgent
-from agents.recommendation_agent import RecommendationAgent
-from crew.crew_manager import CrewManager
+from resume_ats_scorer.agents.resume_parser_agent import ResumeParserAgent
+from resume_ats_scorer.agents.keyword_analyst_agent import KeywordAnalystAgent
+from resume_ats_scorer.agents.job_description_agent import JobDescriptionAgent
+from resume_ats_scorer.agents.matching_agent import MatchingAgent
+from resume_ats_scorer.agents.scoring_agent import ScoringAgent
+from resume_ats_scorer.agents.recommendation_agent import RecommendationAgent
+from resume_ats_scorer.crew.crew_manager import CrewManager
 
 
 class TestResumeParserAgent(unittest.TestCase):
@@ -28,7 +28,7 @@ class TestResumeParserAgent(unittest.TestCase):
         """Clean up test environment."""
         os.unlink(self.test_file.name)
     
-    @patch('agents.resume_parser_agent.TextExtractor.extract_from_pdf')
+    @patch('resume_ats_scorer.agents.resume_parser_agent.TextExtractor.extract_from_pdf')
     def test_parse_resume(self, mock_extract):
         """Test parsing a resume file."""
         # Mock the extraction function

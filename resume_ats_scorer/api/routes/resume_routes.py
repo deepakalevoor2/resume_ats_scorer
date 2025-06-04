@@ -5,16 +5,19 @@ from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends, B
 from fastapi.responses import JSONResponse
 from typing import List
 
-from ..models.schemas import (
+from ...models.schemas import (
     ResumeUploadRequest,
     ResumeScoreResponse,
+    FileType,
     JobSource,
+    ParsedResume,
+    ParsedJobDescription,
     ErrorResponse
 )
-from utils.file_handlers import save_upload_file, extract_text_from_file
-from utils.scoring import calculate_resume_score
-from utils.text_processors import extract_keywords_from_resume, extract_job_requirements
-from utils.agents import create_crew_for_analysis
+from resume_ats_scorer.utils.file_handlers import save_upload_file, extract_text_from_file
+from resume_ats_scorer.utils.scoring import calculate_resume_score
+from resume_ats_scorer.utils.text_processors import extract_keywords_from_resume, extract_job_requirements
+from resume_ats_scorer.utils.agents import create_crew_for_analysis
 
 # Configure logging
 logger = logging.getLogger(__name__)

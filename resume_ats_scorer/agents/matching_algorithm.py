@@ -1,7 +1,7 @@
 import logging
 from typing import Dict, List, Tuple
 from crewai import Agent
-from ..models.schemas import ParsedResume, ParsedJobDescription, ResumeScoreResult, SectionScore, ResumeSection
+from ..models.schemas import ParsedResume, ParsedJobDescription, ResumeScoreResponse, SectionScore, ResumeSection
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ class MatchingAlgorithm:
             allow_delegation=False
         )
     
-    async def generate_score(self, resume: ParsedResume, job_description: ParsedJobDescription) -> ResumeScoreResult:
+    async def generate_score(self, resume: ParsedResume, job_description: ParsedJobDescription) -> ResumeScoreResponse:
         """Generate a comprehensive score based on resume and job description."""
         logger.info("Generating resume score")
         
@@ -36,7 +36,7 @@ class MatchingAlgorithm:
                 resume, job_description, content_match_score, format_score, section_scores, content_missing
             )
             
-            return ResumeScoreResult(
+            return ResumeScoreResponse(
                 total_score=total_score,
                 content_match_score=content_match_score,
                 format_compatibility_score=format_score,

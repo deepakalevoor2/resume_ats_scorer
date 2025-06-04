@@ -1,7 +1,7 @@
 import logging
 from typing import List
 from crewai import Agent
-from ..models.schemas import ResumeScoreResult, ParsedResume, ParsedJobDescription
+from ..models.schemas import ResumeScoreResponse, ParsedResume, ParsedJobDescription
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ class RecommendationEngine:
         self, 
         resume: ParsedResume, 
         job_description: ParsedJobDescription, 
-        score_result: ResumeScoreResult
+        score_result: ResumeScoreResponse
     ) -> List[str]:
         """Generate detailed recommendations based on score analysis."""
         logger.info("Generating detailed recommendations")
@@ -54,7 +54,7 @@ class RecommendationEngine:
             logger.error(f"Error generating recommendations: {str(e)}")
             raise
     
-    def _generate_formatting_recommendations(self, resume: ParsedResume, score_result: ResumeScoreResult) -> List[str]:
+    def _generate_formatting_recommendations(self, resume: ParsedResume, score_result: ResumeScoreResponse) -> List[str]:
         """Generate formatting-specific recommendations."""
         recommendations = []
         
@@ -95,7 +95,7 @@ class RecommendationEngine:
         self, 
         resume: ParsedResume, 
         job_description: ParsedJobDescription, 
-        score_result: ResumeScoreResult
+        score_result: ResumeScoreResponse
     ) -> List[str]:
         """Generate content-specific recommendations."""
         recommendations = []
@@ -139,7 +139,7 @@ class RecommendationEngine:
         
         return recommendations
     
-    def _generate_ats_optimization_recommendations(self, resume: ParsedResume, score_result: ResumeScoreResult) -> List[str]:
+    def _generate_ats_optimization_recommendations(self, resume: ParsedResume, score_result: ResumeScoreResponse) -> List[str]:
         """Generate ATS-specific optimization recommendations."""
         recommendations = []
         

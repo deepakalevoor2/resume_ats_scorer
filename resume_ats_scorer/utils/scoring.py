@@ -3,7 +3,7 @@ import re
 from typing import List, Dict, Any, Tuple
 import datetime
 
-from api.models.schemas import (
+from resume_ats_scorer.models.schemas import (
     ResumeScoreResponse,
     ContentMatch,
     FormatCompatibility,

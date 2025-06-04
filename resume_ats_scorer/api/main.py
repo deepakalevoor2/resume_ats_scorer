@@ -1,5 +1,5 @@
 import logging
-from fastapi import FastAPI, File, UploadFile, HTTPException, Depends, Form
+from fastapi import FastAPI, File, UploadFile, HTTPException, Depends, Form, Request
 from fastapi.middleware.cors import CORSMiddleware
 import os
 import tempfile
@@ -10,9 +10,12 @@ from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
 from pathlib import Path
 import shutil
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 from ..core.crew_manager import ResumeCrewManager
-from ..models.schemas import ScoringRequest, ResumeScoreResult, FileType, JobPlatform
+from ..models.schemas import ResumeUploadRequest, ResumeScoreResponse, FileType, JobSource
 from .routes import resume, job_description, scoring
 from ..core.exceptions import (
     ResumeATSException,
@@ -23,6 +26,7 @@ from ..core.exceptions import (
     ScoringError,
     JobDescriptionError
 )
+from ..core.config import settings
 
 # Configure logging
 logging.basicConfig(
@@ -30,6 +34,9 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
+
+# Initialize rate limiter
+limiter = Limiter(key_func=get_remote_address)
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -59,8 +66,14 @@ app = FastAPI(
     license_info={
         "name": "MIT",
         "url": "https://opensource.org/licenses/MIT"
-    }
+    },
+    docs_url="/docs",
+    redoc_url="/redoc"
 )
+
+# Add rate limiter to app state
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Add CORS middleware
 app.add_middleware(
@@ -70,6 +83,26 @@ app.add_middleware(
     allow_methods=["*"],  # Allow all methods
     allow_headers=["*"],  # Allow all headers
 )
+
+# Add version header middleware
+@app.middleware("http")
+async def add_version_header(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Ats-Scorer-Version"] = "1.0.0"
+    return response
+
+# Add request size limit middleware
+@app.middleware("http")
+async def check_request_size(request: Request, call_next):
+    content_length = request.headers.get("content-length")
+    if content_length:
+        size = int(content_length)
+        if size > settings.MAX_UPLOAD_SIZE:
+            return JSONResponse(
+                status_code=413,
+                content={"detail": f"Request too large. Maximum size is {settings.MAX_UPLOAD_SIZE} bytes."}
+            )
+    return await call_next(request)
 
 # Initialize the crew manager
 crew_manager = ResumeCrewManager()
@@ -188,11 +221,11 @@ async def root():
         "redoc": "/redoc"
     }
 
-@app.post("/score", response_model=ResumeScoreResult)
+@app.post("/score", response_model=ResumeScoreResponse)
 async def score_resume(
     resume_file: UploadFile = File(...),
     job_description: str = Form(...),
-    job_platform: JobPlatform = Form(JobPlatform.OTHER)
+    job_platform: JobSource = Form(JobSource.OTHER)
 ):
     """Score a resume against a job description."""
     try:
@@ -217,7 +250,7 @@ async def score_resume(
         
         try:
             # Create scoring request
-            request = ScoringRequest(
+            request = ResumeUploadRequest(
                 resume_file_path=temp_file_path,
                 job_description=job_description,
                 job_platform=job_platform,
@@ -241,7 +274,8 @@ async def score_resume(
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/health", tags=["Health"])
-async def health_check():
+@limiter.limit("5/minute")
+async def health_check(request: Request):
     """Health check endpoint."""
     return {"status": "healthy"}
 

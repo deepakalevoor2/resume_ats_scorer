@@ -2,8 +2,18 @@ import logging
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Any
-from ..models.schemas import ErrorResponse, KeywordAnalysis, JobRequirements
-from utils.scoring import calculate_resume_score
+from ...models.schemas import (
+    ResumeUploadRequest,
+    ResumeScoreResponse,
+    FileType,
+    JobSource,
+    ParsedResume,
+    ParsedJobDescription,
+    ErrorResponse,
+    KeywordAnalysis,
+    JobRequirements
+)
+from resume_ats_scorer.utils.scoring import calculate_resume_score
 
 logger = logging.getLogger(__name__)
 

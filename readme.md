@@ -1,5 +1,8 @@
 # Resume ATS Scorer
 
+[![CI/CD Pipeline](https://github.com/yourusername/resume-ats-scorer/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/yourusername/resume-ats-scorer/actions/workflows/ci-cd.yml)
+[![codecov](https://codecov.io/gh/yourusername/resume-ats-scorer/branch/main/graph/badge.svg)](https://codecov.io/gh/yourusername/resume-ats-scorer)
+
 A multi-agent system for analyzing resumes against job descriptions and providing ATS (Applicant Tracking System) compatibility scores.
 
 ## Features
@@ -9,6 +12,82 @@ A multi-agent system for analyzing resumes against job descriptions and providin
 - **Job Description Processing**: Parse and analyze job requirements
 - **ATS Compatibility Scoring**: Evaluate resume format and content
 - **Improvement Recommendations**: Suggest ways to enhance ATS compatibility
+
+## Docker Image
+
+The application is available as a Docker image on Docker Hub:
+
+```bash
+docker pull yourusername/resume-ats-scorer:latest
+```
+
+### Running with Docker
+
+1. Pull the image:
+```bash
+docker pull yourusername/resume-ats-scorer:latest
+```
+
+2. Run the container:
+```bash
+docker run -d \
+  --name resume-ats-scorer \
+  -p 8000:8000 \
+  -e OPENAI_API_KEY=your_api_key \
+  -e API_KEY=your_api_key \
+  -e DEBUG=false \
+  -e LOG_LEVEL=INFO \
+  -v /path/to/uploads:/app/uploads \
+  -v /path/to/logs:/app/logs \
+  yourusername/resume-ats-scorer:latest
+```
+
+The application will be available at `http://localhost:8000`.
+
+### Environment Variables
+
+| Variable | Description | Required | Default |
+|----------|-------------|----------|---------|
+| `OPENAI_API_KEY` | Your OpenAI API key | Yes | - |
+| `API_KEY` | API key for securing endpoints | No | - |
+| `DEBUG` | Enable debug mode | No | false |
+| `LOG_LEVEL` | Logging level (DEBUG, INFO, WARNING, ERROR) | No | INFO |
+| `UPLOAD_DIR` | Directory for uploaded files | No | /app/uploads |
+| `MAX_UPLOAD_SIZE` | Maximum file upload size in bytes | No | 10485760 (10MB) |
+
+### Volume Mounts
+
+| Path | Description | Required |
+|------|-------------|----------|
+| `/app/uploads` | Directory for storing uploaded resumes | No |
+| `/app/logs` | Directory for application logs | No |
+
+### Docker Compose
+
+For development or testing, you can use Docker Compose:
+
+```yaml
+version: '3.8'
+
+services:
+  resume-ats-scorer:
+    image: yourusername/resume-ats-scorer:latest
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENAI_API_KEY=your_api_key
+      - API_KEY=your_api_key
+      - DEBUG=false
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+```
+
+Save this as `docker-compose.yml` and run:
+```bash
+docker-compose up -d
+```
 
 ## Installation
 
@@ -29,13 +108,6 @@ pip install resume-ats-scorer
 git clone https://github.com/deepakalevoor2/resume_ats_scorer.git
 cd resume_ats_scorer
 pip install -e .
-```
-
-### Using Docker
-
-```bash
-docker pull deepakalevoor2/resume-ats-scorer:latest
-docker run -p 8000:8000 resume-ats-scorer
 ```
 
 ## Usage

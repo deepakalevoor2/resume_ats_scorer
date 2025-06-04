@@ -6,8 +6,8 @@ import json
 from fastapi.testclient import TestClient
 from pathlib import Path
 
-from api.app import app
-from api.routes import router
+from resume_ats_scorer.api.main import app
+from resume_ats_scorer.api.routes import resume, job_description, scoring
 
 
 class TestAPIEndpoints(unittest.TestCase):
@@ -33,7 +33,7 @@ class TestAPIEndpoints(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"status": "ok"})
     
-    @patch('api.routes.CrewManager.process_resume')
+    @patch('resume_ats_scorer.core.crew_manager.ResumeCrewManager.process_resume')
     def test_upload_resume(self, mock_process_resume):
         """Test the resume upload endpoint."""
         # Mock the process_resume method
@@ -46,7 +46,7 @@ class TestAPIEndpoints(unittest.TestCase):
         # Test file upload
         with open(self.test_file.name, "rb") as file:
             response = self.client.post(
-                "/resume/upload",
+                "/api/v1/resume/upload",
                 files={"file": ("test_resume.pdf", file, "application/pdf")}
             )
         
@@ -56,7 +56,7 @@ class TestAPIEndpoints(unittest.TestCase):
         self.assertTrue(data["success"])
         self.assertEqual(data["resume_id"], "test-id")
     
-    @patch('api.routes.CrewManager.submit_job_description')
+    @patch('resume_ats_scorer.core.crew_manager.ResumeCrewManager.submit_job_description')
     def test_submit_job_description(self, mock_submit_job):
         """Test the job description submission endpoint."""
         # Mock the submit_job_description method
@@ -75,7 +75,7 @@ class TestAPIEndpoints(unittest.TestCase):
             "description": "Looking for a Python developer with 3 years of experience",
             "source": "LinkedIn"
         }
-        response = self.client.post("/job/submit", json=job_data)
+        response = self.client.post("/api/v1/job-description/submit", json=job_data)
         
         # Check the response
         self.assertEqual(response.status_code, 200)
@@ -84,7 +84,7 @@ class TestAPIEndpoints(unittest.TestCase):
         self.assertEqual(data["job_id"], "test-job-id")
         self.assertIn("parsed_requirements", data)
     
-    @patch('api.routes.CrewManager.match_resume_to_job')
+    @patch('resume_ats_scorer.core.crew_manager.ResumeCrewManager.match_resume_to_job')
     def test_match_resume_to_job(self, mock_match):
         """Test the resume-job matching endpoint."""
         # Mock the match_resume_to_job method
@@ -109,7 +109,7 @@ class TestAPIEndpoints(unittest.TestCase):
             "resume_id": "test-resume-id",
             "job_id": "test-job-id"
         }
-        response = self.client.post("/match", json=match_data)
+        response = self.client.post("/api/v1/scoring/score", json=match_data)
         
         # Check the response
         self.assertEqual(response.status_code, 200)
@@ -121,7 +121,7 @@ class TestAPIEndpoints(unittest.TestCase):
         self.assertIn("section_scores", data)
         self.assertIn("recommendations", data)
     
-    @patch('api.routes.CrewManager.get_resume_details')
+    @patch('resume_ats_scorer.core.crew_manager.ResumeCrewManager.get_resume_details')
     def test_get_resume(self, mock_get_resume):
         """Test the get resume details endpoint."""
         # Mock the get_resume_details method
@@ -138,7 +138,7 @@ class TestAPIEndpoints(unittest.TestCase):
         }
         
         # Test getting resume details
-        response = self.client.get("/resume/test-resume-id")
+        response = self.client.get("/api/v1/resume/test-resume-id")
         
         # Check the response
         self.assertEqual(response.status_code, 200)
@@ -149,7 +149,7 @@ class TestAPIEndpoints(unittest.TestCase):
         self.assertIn("sections", data)
         self.assertIn("keywords", data)
     
-    @patch('api.routes.CrewManager.get_job_details')
+    @patch('resume_ats_scorer.core.crew_manager.ResumeCrewManager.get_job_details')
     def test_get_job(self, mock_get_job):
         """Test the get job details endpoint."""
         # Mock the get_job_details method
@@ -165,7 +165,7 @@ class TestAPIEndpoints(unittest.TestCase):
         }
         
         # Test getting job details
-        response = self.client.get("/job/test-job-id")
+        response = self.client.get("/api/v1/job-description/test-job-id")
         
         # Check the response
         self.assertEqual(response.status_code, 200)
@@ -182,16 +182,16 @@ class TestAPIEndpoints(unittest.TestCase):
         self.assertEqual(response.status_code, 404)
         
         # Test invalid resume ID
-        response = self.client.get("/resume/invalid_id")
+        response = self.client.get("/api/v1/resume/invalid_id")
         self.assertEqual(response.status_code, 404)
         
         # Test invalid job ID
-        response = self.client.get("/job/invalid_id")
+        response = self.client.get("/api/v1/job-description/invalid_id")
         self.assertEqual(response.status_code, 404)
         
         # Test invalid file upload
         response = self.client.post(
-            "/resume/upload",
+            "/api/v1/resume/upload",
             files={"file": ("test.txt", b"Invalid content", "text/plain")}
         )
         self.assertEqual(response.status_code, 400)

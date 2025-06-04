@@ -23,12 +23,108 @@ class ResumeSection(str, Enum):
     OTHER = "other"
 
 
-class JobPlatform(str, Enum):
+class JobSource(str, Enum):
     LINKEDIN = "linkedin"
+    NAUKRI = "naukri"
     INDEED = "indeed"
-    GLASSDOOR = "glassdoor"
     MONSTER = "monster"
+    GLASSDOOR = "glassdoor"
     OTHER = "other"
+
+
+class SectionScore(BaseModel):
+    name: str = Field(..., description="Name of the section")
+    score: float = Field(..., ge=0, le=10, description="Score for this section (0-10)")
+    max_score: float = Field(default=10, description="Maximum possible score for this section")
+    feedback: str = Field(..., description="Feedback on this section")
+    matches: List[str] = Field(default_factory=list, description="Matching keywords or phrases")
+    missing: List[str] = Field(default_factory=list, description="Missing keywords or phrases")
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "name": "Experience",
+                "score": 8.5,
+                "max_score": 10,
+                "feedback": "Strong experience section with relevant details",
+                "matches": ["python", "aws"],
+                "missing": ["kubernetes"]
+            }
+        }
+    }
+
+
+class ContentMatch(BaseModel):
+    score: float = Field(..., ge=0, le=40, description="Content match score (0-40)")
+    matched_keywords: List[str] = Field(default_factory=list, description="Keywords that matched")
+    missing_keywords: List[str] = Field(default_factory=list, description="Keywords that were missing")
+    feedback: str = Field(..., description="Feedback on content match")
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "score": 35.5,
+                "matched_keywords": ["python", "aws"],
+                "missing_keywords": ["kubernetes"],
+                "feedback": "Good match with most required skills"
+            }
+        }
+    }
+
+
+class FormatCompatibility(BaseModel):
+    score: float = Field(..., ge=0, le=20, description="Format compatibility score (0-20)")
+    issues: List[str] = Field(default_factory=list, description="Format-related issues found")
+    feedback: str = Field(..., description="Feedback on format compatibility")
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "score": 18.0,
+                "issues": ["Font size too small in some sections"],
+                "feedback": "Good overall format with minor issues"
+            }
+        }
+    }
+
+
+class SectionAnalysis(BaseModel):
+    score: float = Field(..., ge=0, le=30, description="Section analysis score (0-30)")
+    sections: List[SectionScore] = Field(default_factory=list, description="Scores for each section")
+    feedback: str = Field(..., description="Feedback on section analysis")
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "score": 25.5,
+                "sections": [
+                    {
+                        "name": "Experience",
+                        "score": 8.5,
+                        "max_score": 10,
+                        "feedback": "Strong experience section",
+                        "matches": ["python", "aws"],
+                        "missing": ["kubernetes"]
+                    }
+                ],
+                "feedback": "Well-structured sections with good content"
+            }
+        }
+    }
+
+
+class OverallScore(BaseModel):
+    score: float = Field(..., ge=0, le=10, description="Overall score (0-10)")
+    feedback: str = Field(..., description="Overall feedback")
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "score": 8.5,
+                "feedback": "Strong resume overall"
+            }
+        }
+    }
 
 
 class ParsedResume(BaseModel):
@@ -99,79 +195,154 @@ class ParsedJobDescription(BaseModel):
     }
 
 
-class SectionScore(BaseModel):
-    section: ResumeSection
-    score: float = Field(..., ge=0, le=10, description="Score for this section (0-10)")
-    max_score: float = Field(default=10, description="Maximum possible score for this section")
-    feedback: str = Field(..., description="Feedback on this section")
-    matches: List[str] = Field(default_factory=list, description="Matching keywords or phrases")
-    missing: List[str] = Field(default_factory=list, description="Missing keywords or phrases")
+class ResumeUploadRequest(BaseModel):
+    job_description: str = Field(..., description="Job description text")
+    job_source: JobSource = Field(default=JobSource.OTHER, description="Source of the job posting")
+    job_title: str = Field(..., description="Job title")
 
     model_config = {
         "json_schema_extra": {
             "example": {
-                "section": "experience",
-                "score": 8.5,
-                "max_score": 10,
-                "feedback": "Strong experience section",
-                "matches": ["python", "aws"],
-                "missing": ["kubernetes"]
+                "job_description": "Looking for a senior software engineer...",
+                "job_source": "linkedin",
+                "job_title": "Senior Software Engineer"
             }
         }
     }
 
 
-class ResumeScoreResult(BaseModel):
-    total_score: float = Field(..., ge=0, le=100, description="Overall ATS compatibility score (0-100)")
-    content_match_score: float = Field(..., ge=0, le=50, description="Content match score (0-50)")
-    format_compatibility_score: float = Field(..., ge=0, le=20, description="Format compatibility score (0-20)")
-    section_scores: List[SectionScore] = Field(default_factory=list, description="Scores for each resume section")
-    recommendations: List[str] = Field(default_factory=list, description="Recommendations for improvement")
-    created_at: datetime = Field(default_factory=datetime.now, description="Timestamp of when the score was generated")
+class KeywordAnalysis(BaseModel):
+    hard_skills: List[str] = Field(default_factory=list, description="Hard skills found")
+    soft_skills: List[str] = Field(default_factory=list, description="Soft skills found")
+    experience: Dict[str, int] = Field(default_factory=dict, description="Experience in years by category")
+    education: List[str] = Field(default_factory=list, description="Education details")
 
     model_config = {
         "json_schema_extra": {
             "example": {
-                "total_score": 85.5,
-                "content_match_score": 42.5,
-                "format_compatibility_score": 18.0,
-                "section_scores": [
-                    {
-                        "section": "experience",
-                        "score": 8.5,
-                        "max_score": 10,
-                        "feedback": "Strong experience section",
-                        "matches": ["python", "aws"],
-                        "missing": ["kubernetes"]
-                    }
+                "hard_skills": ["python", "aws"],
+                "soft_skills": ["leadership", "communication"],
+                "experience": {"python": 5, "aws": 3},
+                "education": ["B.S. Computer Science"]
+            }
+        }
+    }
+
+
+class JobRequirements(BaseModel):
+    required_skills: List[str] = Field(default_factory=list, description="Required skills")
+    preferred_skills: List[str] = Field(default_factory=list, description="Preferred skills")
+    experience_required: Optional[int] = Field(default=None, description="Years of experience required")
+    education_required: Optional[List[str]] = Field(default=None, description="Required education")
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "required_skills": ["python", "aws"],
+                "preferred_skills": ["kubernetes"],
+                "experience_required": 5,
+                "education_required": ["B.S. Computer Science"]
+            }
+        }
+    }
+
+
+class ResumeScoreResponse(BaseModel):
+    """Response model for resume scoring."""
+    success: bool = Field(..., description="Whether the scoring was successful")
+    overall_score: float = Field(..., description="Overall ATS compatibility score (0-100)")
+    content_score: float = Field(..., description="Content match score (0-100)")
+    format_score: float = Field(..., description="Format compatibility score (0-100)")
+    section_scores: Dict[str, float] = Field(..., description="Scores for each resume section")
+    recommendations: List[str] = Field(..., description="List of improvement recommendations")
+    breakdown: Dict[str, Dict[str, float]] = Field(
+        ...,
+        description="Detailed breakdown of scoring weights and calculations",
+        example={
+            "content_match": {
+                "keyword_matching": 0.8,
+                "experience_relevance": 0.7
+            },
+            "format_compatibility": {
+                "document_structure": 0.9,
+                "ats_friendly_elements": 0.85
+            },
+            "section_weights": {
+                "summary": 0.05,
+                "experience": 0.07,
+                "skills": 0.05,
+                "education": 0.03
+            }
+        }
+    )
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "success": True,
+                "overall_score": 85.5,
+                "content_score": 35.5,
+                "format_score": 18.0,
+                "section_scores": {
+                    "contact": 10.0,
+                    "summary": 8.5,
+                    "experience": 8.5,
+                    "education": 8.5,
+                    "skills": 8.5,
+                    "certifications": 10.0,
+                    "projects": 10.0,
+                    "languages": 10.0,
+                    "other": 10.0
+                },
+                "recommendations": [
+                    "Add more details about Kubernetes experience",
+                    "Increase font size in some sections"
                 ],
-                "recommendations": ["Add more details about Kubernetes experience"],
-                "created_at": "2024-03-20T12:00:00"
+                "breakdown": {
+                    "content_match": {
+                        "keyword_matching": 0.8,
+                        "experience_relevance": 0.7
+                    },
+                    "format_compatibility": {
+                        "document_structure": 0.9,
+                        "ats_friendly_elements": 0.85
+                    },
+                    "section_weights": {
+                        "summary": 0.05,
+                        "experience": 0.07,
+                        "skills": 0.05,
+                        "education": 0.03
+                    }
+                }
             }
         }
     }
 
-    @field_validator('total_score')
+    @field_validator('overall_score')
     @classmethod
-    def validate_total_score(cls, v: float) -> float:
+    def validate_overall_score(cls, v: float) -> float:
+        return round(v, 2)
+
+    @field_validator('content_score')
+    @classmethod
+    def validate_content_score(cls, v: float) -> float:
+        return round(v, 2)
+
+    @field_validator('format_score')
+    @classmethod
+    def validate_format_score(cls, v: float) -> float:
         return round(v, 2)
 
 
-class ScoringRequest(BaseModel):
-    resume_file_path: str = Field(..., description="Path to the uploaded resume file")
-    job_description: str = Field(..., description="Job description text")
-    job_platform: JobPlatform = Field(default=JobPlatform.OTHER, description="Platform where the job was posted")
-    file_type: FileType = Field(..., description="Type of resume file")
-    additional_context: Dict[str, Any] = Field(default_factory=dict, description="Additional context for scoring")
+class ErrorResponse(BaseModel):
+    error: str = Field(..., description="Error message")
+    details: Optional[Any] = Field(default=None, description="Additional error details")
 
     model_config = {
         "json_schema_extra": {
             "example": {
-                "resume_file_path": "/path/to/resume.pdf",
-                "job_description": "Looking for a senior software engineer...",
-                "job_platform": "linkedin",
-                "file_type": "pdf",
-                "additional_context": {"industry": "tech"}
+                "error": "Invalid file format",
+                "details": {"supported_formats": ["pdf", "docx", "txt", "html"]}
             }
         }
     }

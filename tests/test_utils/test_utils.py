@@ -4,7 +4,7 @@ import os
 from unittest.mock import patch, MagicMock
 import re
 
-from utils.text_processors import (
+from resume_ats_scorer.utils.text_processors import (
     TextExtractor,
     KeywordExtractor,
     SectionExtractor,
@@ -38,7 +38,7 @@ class TestTextExtractor(unittest.TestCase):
         os.unlink(self.docx_file.name)
         os.unlink(self.html_file.name)
     
-    @patch('utils.text_processors.pdf_extract_text')
+    @patch('resume_ats_scorer.utils.text_processors.pdf_extract_text')
     def test_extract_from_pdf(self, mock_extract):
         """Test extracting text from PDF."""
         # Mock the PDF extraction
@@ -51,7 +51,7 @@ class TestTextExtractor(unittest.TestCase):
         self.assertEqual(result, "Sample PDF text")
         mock_extract.assert_called_once_with(self.pdf_file.name)
     
-    @patch('utils.text_processors.docx2txt.process')
+    @patch('resume_ats_scorer.utils.text_processors.docx2txt.process')
     def test_extract_from_docx(self, mock_process):
         """Test extracting text from DOCX."""
         # Mock the DOCX extraction
